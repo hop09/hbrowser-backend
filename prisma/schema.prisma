@@ -1,0 +1,44 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  name          String         @unique
+  email         String         @unique
+  password      String
+  ownedProfiles Profile[]      @relation("ProfileOwner")
+  sharedAccess  ProfileShare[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Profile {
+  id         String         @id
+  ownerId    Int
+  name       String
+  metadata   Json?
+  lastSynced DateTime?
+  owner      User           @relation("ProfileOwner", fields: [ownerId], references: [id])
+  shares     ProfileShare[]
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+}
+
+model ProfileShare {
+  id         Int      @id @default(autoincrement())
+  profileId  String
+  userId     Int
+  permission String   @default("read")
+  profile    Profile  @relation(fields: [profileId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([profileId, userId])
+}
